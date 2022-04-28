@@ -3,8 +3,6 @@
 extern crate hex;
 extern crate openssl;
 
-use hex::ToHex;
-use openssl::sha;
 use sha2::Digest;
 
 pub type Data<'a> = Vec<u8>;
@@ -12,7 +10,7 @@ pub type Hash = Vec<u8>;
 
 pub struct MerkleTree {
     root_hash: Hash,
-    proofs: Vec<Vec<Hash>>,
+    tree: Vec<Vec<Hash>>,
 }
 
 /// Which side to put Hash on when concatinating proof hashes
@@ -43,7 +41,7 @@ impl<'a> MerkleTree {
 
         MerkleTree {
             root_hash: tree.last().unwrap().last().unwrap().to_vec(),
-            proofs: tree,
+            tree: tree,
         }
     }
 
@@ -52,8 +50,8 @@ impl<'a> MerkleTree {
         let tree = MerkleTree::construct(input);
 
         &tree.root_hash == root_hash
-
     }
+
 }
 
 fn hash_data(data: &Data) -> Hash {
@@ -66,57 +64,81 @@ fn hash_concat(h1: &Hash, h2: &Hash) -> Hash {
 }
 
 fn recursive_merkle_tree(hashed_data: Vec<Vec<Hash>>) -> Vec<Vec<Hash>> {
-    let mut temp_res: Vec<Vec<Hash>> = hashed_data;
+    let mut res: Vec<Vec<Hash>> = hashed_data;
 
-    if temp_res.last().unwrap().len() > 1 {
-        let mut res: Vec<Hash> = Vec::new();
+    if res.last().unwrap().len() > 1 {
+        let mut level_hashes: Vec<Hash> = Vec::new();
 
-        for i in 0..temp_res.last().unwrap().len() / 2 {
-            res.push(hash_concat(
-                &temp_res.last().unwrap()[i],
-                &temp_res.last().unwrap()[i + 1],
+        for i in 0..res.last().unwrap().len() / 2 {
+            level_hashes.push(hash_concat(
+                &res.last().unwrap()[i],
+                &res.last().unwrap()[i + 1],
             ))
         }
-        temp_res.push(res);
 
-        recursive_merkle_tree(temp_res)
+        res.push(level_hashes);
+
+        recursive_merkle_tree(res)
     } else {
-        temp_res
+        res
     }
 }
 
 fn main() {
-
-    let data: Data = vec![
-        0,1,2,3,4,5,6,7
+    let data: Vec<Data> = vec![
+        vec![0, 1, 3, 200, 200, 201, 230],
+        vec![0, 1, 4, 200, 200, 201, 230],
+        vec![0, 1, 42, 230, 200, 201, 230],
+        vec![0, 1, 25, 200, 200, 201, 230],
     ];
 
-    let tree = MerkleTree::construct(&[data]);
+    let tree = MerkleTree::construct(&data);
 
-    println!(
-        "The data's merkle root is: {:?}",
-        tree.root_hash
-    );
+    println!("The data's merkle root is: {:?}", tree.root_hash);
 
-    println!(
-        "The whole tree: {:?}",
-        tree.proofs
-    );
+    println!("The whole tree: {:?}", tree.tree);
 
-    let data2: Data = vec![
-        0,1,2,3,4,5,6,7
+    let root = vec![
+        201, 225, 191, 7, 28, 171, 200, 102, 218, 182, 217, 57, 83, 52, 237, 142, 146, 42, 18, 112,
+        50, 187, 70, 252, 143, 61, 167, 209, 37, 23, 160, 84,
     ];
-    let root = vec![138, 133, 31, 248, 46, 231, 4, 138, 208, 158, 195, 132, 127, 29, 223, 68, 148, 65, 4, 210, 203, 209, 126, 244, 227, 219, 34, 198, 120, 90, 13, 69];
-    println!(
-        "Is three correct: {:?}",
-        MerkleTree::verify(&[data2], &root )
-    );
-
-
+    println!("Is three correct: {:?}", MerkleTree::verify(&data, &root));
 }
 
-#[cfg(tests)]
+#[cfg(test)]
 mod tests {
+    use crate::MerkleTree;
+    use crate::Data;
 
-    fn test() {}
+    #[test]
+    fn construct_correct(){
+        let data: Vec<Data> = vec![
+        vec![0, 1, 3, 200, 200, 201, 230],
+        vec![0, 1, 4, 200, 200, 201, 230],
+        vec![0, 1, 42, 230, 200, 201, 230],
+        vec![0, 1, 25, 200, 200, 201, 230],
+    ];
+
+    let merkle_tree = MerkleTree::construct(&data);
+    assert!(merkle_tree.root_hash.len() == 32);
+
+    assert!(merkle_tree.tree.len() == 3);
+    assert!(merkle_tree.tree.first().unwrap().len() == 4);
+
+    }
+
+    #[test]
+    fn verify_correct() {
+        let data: Vec<Data> = vec![
+        vec![0, 1, 3, 200, 200, 201, 230],
+        vec![0, 1, 4, 200, 200, 201, 230],
+        vec![0, 1, 42, 230, 200, 201, 230],
+        vec![0, 1, 25, 200, 200, 201, 230],
+    ];
+        let root = vec![
+        201, 225, 191, 7, 28, 171, 200, 102, 218, 182, 217, 57, 83, 52, 237, 142, 146, 42, 18, 112,
+        50, 187, 70, 252, 143, 61, 167, 209, 37, 23, 160, 84,
+    ];
+    assert!(MerkleTree::verify(&data, &root))
+    }
 }
