@@ -30,7 +30,7 @@ pub struct Proof<'a> {
 impl<'a> MerkleTree {
     /// Constructs a Merkle tree from given input data
     pub fn construct(input: &[Data]) -> MerkleTree {
-        let mut data_unhashed = input;
+        let data_unhashed = input;
 
         let mut hashed_data: Vec<Hash> = vec![];
         for element in data_unhashed {
@@ -51,7 +51,6 @@ impl<'a> MerkleTree {
 
         &tree.root_hash == root_hash
     }
-
 }
 
 fn hash_data(data: &Data) -> Hash {
@@ -84,61 +83,41 @@ fn recursive_merkle_tree(hashed_data: Vec<Vec<Hash>>) -> Vec<Vec<Hash>> {
     }
 }
 
-fn main() {
-    let data: Vec<Data> = vec![
-        vec![0, 1, 3, 200, 200, 201, 230],
-        vec![0, 1, 4, 200, 200, 201, 230],
-        vec![0, 1, 42, 230, 200, 201, 230],
-        vec![0, 1, 25, 200, 200, 201, 230],
-    ];
-
-    let tree = MerkleTree::construct(&data);
-
-    println!("The data's merkle root is: {:?}", tree.root_hash);
-
-    println!("The whole tree: {:?}", tree.tree);
-
-    let root = vec![
-        201, 225, 191, 7, 28, 171, 200, 102, 218, 182, 217, 57, 83, 52, 237, 142, 146, 42, 18, 112,
-        50, 187, 70, 252, 143, 61, 167, 209, 37, 23, 160, 84,
-    ];
-    println!("Is three correct: {:?}", MerkleTree::verify(&data, &root));
-}
+fn main() {}
 
 #[cfg(test)]
 mod tests {
-    use crate::MerkleTree;
     use crate::Data;
+    use crate::MerkleTree;
 
     #[test]
-    fn construct_correct(){
+    fn construct_correct() {
         let data: Vec<Data> = vec![
-        vec![0, 1, 3, 200, 200, 201, 230],
-        vec![0, 1, 4, 200, 200, 201, 230],
-        vec![0, 1, 42, 230, 200, 201, 230],
-        vec![0, 1, 25, 200, 200, 201, 230],
-    ];
+            vec![0, 1, 3, 200, 200, 201, 230],
+            vec![0, 1, 4, 200, 200, 201, 230],
+            vec![0, 1, 42, 230, 200, 201, 230],
+            vec![0, 1, 25, 200, 200, 201, 230],
+        ];
 
-    let merkle_tree = MerkleTree::construct(&data);
-    assert!(merkle_tree.root_hash.len() == 32);
+        let merkle_tree = MerkleTree::construct(&data);
+        assert!(merkle_tree.root_hash.len() == 32);
 
-    assert!(merkle_tree.tree.len() == 3);
-    assert!(merkle_tree.tree.first().unwrap().len() == 4);
-
+        assert!(merkle_tree.tree.len() == 3);
+        assert!(merkle_tree.tree.first().unwrap().len() == 4);
     }
 
     #[test]
     fn verify_correct() {
         let data: Vec<Data> = vec![
-        vec![0, 1, 3, 200, 200, 201, 230],
-        vec![0, 1, 4, 200, 200, 201, 230],
-        vec![0, 1, 42, 230, 200, 201, 230],
-        vec![0, 1, 25, 200, 200, 201, 230],
-    ];
+            vec![0, 1, 3, 200, 200, 201, 230],
+            vec![0, 1, 4, 200, 200, 201, 230],
+            vec![0, 1, 42, 230, 200, 201, 230],
+            vec![0, 1, 25, 200, 200, 201, 230],
+        ];
         let root = vec![
-        201, 225, 191, 7, 28, 171, 200, 102, 218, 182, 217, 57, 83, 52, 237, 142, 146, 42, 18, 112,
-        50, 187, 70, 252, 143, 61, 167, 209, 37, 23, 160, 84,
-    ];
-    assert!(MerkleTree::verify(&data, &root))
+            201, 225, 191, 7, 28, 171, 200, 102, 218, 182, 217, 57, 83, 52, 237, 142, 146, 42, 18,
+            112, 50, 187, 70, 252, 143, 61, 167, 209, 37, 23, 160, 84,
+        ];
+        assert!(MerkleTree::verify(&data, &root))
     }
 }
