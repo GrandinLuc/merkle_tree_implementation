@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
 extern crate hex;
 extern crate openssl;
 
@@ -18,13 +16,6 @@ pub struct MerkleTree {
 pub enum HashDirection {
     Left,
     Right,
-}
-
-#[derive(Debug, Default)]
-pub struct Proof<'a> {
-    /// The hashes to use when verifying the proof
-    /// The first element of the tuple is which side the hash should be on when concatinating
-    hashes: Vec<(HashDirection, &'a Hash)>,
 }
 
 impl<'a> MerkleTree {
